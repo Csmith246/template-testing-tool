@@ -18,12 +18,12 @@ const CSS = {
 
 class Header extends Component<HeaderProps, null> {
   componentDidMount() {
-    const title = "Instant Apps: React with TypeScript";
+    const title = "Template Testing Tool";
     this.props.setTitle(title);
   }
 
   render() {
-    return <header className={CSS.base}>{this.props.title}</header>;
+    return <h1 className={CSS.base}>{this.props.title}</h1>;
   }
 }
 

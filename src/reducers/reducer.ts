@@ -5,6 +5,11 @@ function reducer(state, action) {
         ...state,
         title: action.payload
       };
+    case "SET_CRED":
+      return {
+        ...state, 
+        credential: action.payload
+      }
     default:
       return state;
   }

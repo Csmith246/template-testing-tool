@@ -2,8 +2,8 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 
 import Header from "./Components/Header/Header";
-import View from "./Components/View/View";
-import Modal from "./Components/Modal/Modal";
+import ControlPanel from "./Components/ControlPanel/ControlPanel";
+import LoginModal from "./Components/LoginModal/LoginModal";
 
 import "./App.scss";
 import { ApplicationConfig } from "./ApplicationBase/interfaces";
@@ -20,16 +20,13 @@ interface AppState {
 }
 
 class App extends Component<AppProps, AppState> {
-  constructor(props: AppProps) {
-    super(props);
-  }
 
   render() {
     return (
       <div className="App">
         <Header />
-        <View />
-        <Modal />
+        <ControlPanel />
+        <LoginModal />
       </div>
     );
   }
