@@ -6,13 +6,16 @@ import ControlPanel from "./Components/ControlPanel/ControlPanel";
 import LoginModal from "./Components/LoginModal/LoginModal";
 
 import "./App.scss";
-import { ApplicationConfig } from "./ApplicationBase/interfaces";
 
-interface AppProps {
-  portal: __esri.Portal;
+import ApplicationBase from "ApplicationBase/ApplicationBase";
+import { ApplicationConfig } from "ApplicationBase/interfaces";
+
+export interface AppProps {
+  base: ApplicationBase;
   config: ApplicationConfig;
-  webmap: string;
-  setWebmap: any;
+  savedJsonConfigs: {[propName: string]:string}[];
+  title: string;
+  credential: __esri.Credential;
 }
 
 interface AppState {

@@ -1,0 +1,1 @@
+export const SAVED_JSON_CONFIG = "__SAVED_JSON_CONFIG__";

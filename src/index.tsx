@@ -34,15 +34,20 @@ import {
   setPageDirection
 } from "./ApplicationBase/support/domHelper";
 
+import { SAVED_JSON_CONFIG } from "./localStorageKeys";
+
 (async function init(): Promise<void> {
   const base = (await createApplicationBase().load()) as ApplicationBase;
 
   setPageLocale(base.locale);
   setPageDirection(base.direction);
+  const savedJsonConfigs: any[] = JSON.parse(localStorage.getItem(SAVED_JSON_CONFIG));
+  console.log("---------------- BEGINNING SAVED JSON -------------", savedJsonConfigs);
 
   const store = createStore(reducer, {
     base,
-    config: base.config
+    config: base.config,
+    savedJsonConfigs
   });
 
   await applyPolyfills();

@@ -2,16 +2,15 @@ import React, { Component } from "react";
 import PortalQueryParams from "@arcgis/core/portal/PortalQueryParams";
 
 import { connect } from "react-redux";
+import { AppProps } from "../../App";
 
-type AppType = "attachmentviewer" | "lookup";// | "" | "";
 interface TemplateAppPortalInfo {
   id: string,
   title: string,
   urlSuffix: string
 }
 
-interface CreateAppProps {
-  credential: __esri.Credential;
+interface CreateAppProps extends AppProps {
   itemsReload: () => void;
   portal: __esri.Portal;
 }
@@ -20,6 +19,7 @@ interface CreateAppState {
   isCreating: boolean;
   newAppTitle: string;
   newAppTemplateInfo: TemplateAppPortalInfo;
+  newAppJsonTemplate: any;
   appTypeList: TemplateAppPortalInfo[];
 }
 
@@ -27,12 +27,7 @@ class CreateApp extends Component<CreateAppProps, CreateAppState> {
 
   constructor(args) {
     super(args);
-    this.state = {
-      isCreating: false,
-      newAppTitle: null,
-      newAppTemplateInfo: null,
-      appTypeList: null
-    };
+    this.state = this._makeDefaultStateObj();
   }
 
   componentDidUpdate() {
@@ -83,9 +78,31 @@ class CreateApp extends Component<CreateAppProps, CreateAppState> {
               newAppTitle: e.target.value
             })
           }} />
+
+        <select name="JSONTemplate" id="JSONTemplate" placeholder="JSONTemplate"
+          onChange={(e) => {
+            this.setState({
+              ...this.state,
+              newAppJsonTemplate: JSON.parse(e.target.value)
+            })
+          }}
+        >
+          <option value={null}>Choose JSON template for Values</option>
+          {
+            this?.props?.savedJsonConfigs.map((savedJSON, index) => {
+              const id = Object.keys(savedJSON)[0];
+              const value = savedJSON[id];
+              // console.log("KEY: ", id);
+              // console.log("Value: ", value);
+              return <option key={`${id}${index}`} value={value}>{id}</option>;
+            })
+          }
+        </select>
+
         <select name="AppType" id="AppType" placeholder="App Type"
           onChange={(e) => {
             this.setState({
+              ...this.state,
               newAppTemplateInfo: JSON.parse(e.target.value)
             })
           }}
@@ -136,10 +153,13 @@ class CreateApp extends Component<CreateAppProps, CreateAppState> {
       const res = await this.addItemRestCall(newAppTitle, newAppTemplateInfo)
       const appId = res.id;
       const updateRes = await this.updateItemRestCall(appId, newAppTemplateInfo);
-      await new Promise((resolve, reject)=>{
-        setTimeout(()=>{resolve()}, 1000); // small timeout to ensure app item has updated
-      });
       console.log("Update Res: ", updateRes);
+      if(this.state.newAppJsonTemplate != null){
+        await this.updateItemTemplateData(appId, this.state.newAppJsonTemplate);
+      }
+      await new Promise((resolve, reject) => {
+        setTimeout(() => { resolve() }, 1000); // small timeout to ensure app item has updated
+      });
 
       this._setDefaultState();
       this.props.itemsReload();
@@ -227,14 +247,38 @@ class CreateApp extends Component<CreateAppProps, CreateAppState> {
     return json;
   }
 
+  async updateItemTemplateData(appId: string, data: any){
+    const item:__esri.PortalItem = await this.queryPortalItems(appId);
+    const itemDataJSON = await item.fetchData("json");
+    console.log(itemDataJSON);
+    itemDataJSON.values = data; // update values only
+    await item.update({ data: itemDataJSON });
+
+  }
+
 
   private _setDefaultState() {
-    this.setState({
+    this.setState(this._makeDefaultStateObj());
+  }
+
+  // queryPortalItems
+  async queryPortalItems<T>(appid: string): Promise<__esri.PortalItem> {
+    const queryParams = {
+      query: `id:${appid}`,
+      disableExtraQuery: true
+    };
+    const portalResults = await this.props.portal.queryItems(queryParams);
+    return portalResults.results[0];
+  }
+
+  private _makeDefaultStateObj(): CreateAppState {
+    return {
       isCreating: false,
       newAppTitle: null,
       newAppTemplateInfo: null,
+      newAppJsonTemplate: null,
       appTypeList: null
-    });
+    };
   }
 }
 

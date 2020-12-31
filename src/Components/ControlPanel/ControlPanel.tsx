@@ -1,4 +1,4 @@
-import React, { Component, createRef } from "react";
+import React, { Component } from "react";
 
 import { connect } from "react-redux";
 
@@ -8,10 +8,12 @@ import Portal from "@arcgis/core/portal/Portal";
 import PortalQueryParams from "@arcgis/core/portal/PortalQueryParams";
 import CreateApp from "../CreateApp/CreateApp";
 import EditorModal from "../EditorModal/EditorModal";
+import { AppProps } from "../../App";
 
+type addToSavedJsonConfig = (id: string, value: string) => void;
 
-interface ControlPanelProps {
-  credential: __esri.Credential;
+interface ControlPanelProps extends AppProps {
+  addToSavedJsonConfig: addToSavedJsonConfig;
 }
 
 interface ControlPanelState {
@@ -29,12 +31,14 @@ const CSS = {
   launchButtons: "esri-control-panel__launchButtons",
 };
 
+const DEFAULT_EDITOR_JSON: string = `{
+  "test" : "test1"
+}`;
+
 class ControlPanel extends Component<ControlPanelProps, ControlPanelState> {
 
   componentDidUpdate() {
-    console.log("COMPONCNET DID UPDAT");
     if (this.props.credential != null && this?.state?.portal == null) {
-      console.log("COntrol Panel ---  token defined");
       var portal = new Portal({ url: this.props.credential.server });
       // Setting authMode to immediate signs the user in once loaded
       portal.authMode = "immediate";
@@ -43,8 +47,11 @@ class ControlPanel extends Component<ControlPanelProps, ControlPanelState> {
     }
   }
 
-  componentDidMount() {
-    console.log("COntrol Panel ---  componetn did mount");
+  generalJSONEditorToggle(){
+    this.setState({
+      ...this.state,
+      isEditorOpen: !this.state.isEditorOpen
+    })
   }
 
   render() {
@@ -52,12 +59,7 @@ class ControlPanel extends Component<ControlPanelProps, ControlPanelState> {
 
       <h3 className={CSS.heading}>Control Panel</h3>
       <div style={{ textAlign: "right", marginRight: "70px" }}>
-        <calcite-button onClick={()=>{
-          this.setState({
-            ...this.state,
-            isEditorOpen: !this.state.isEditorOpen
-          })
-        }}>
+        <calcite-button onClick={this.generalJSONEditorToggle.bind(this)}>
           Open Editor
         </calcite-button>
       </div>
@@ -65,7 +67,14 @@ class ControlPanel extends Component<ControlPanelProps, ControlPanelState> {
         portal={this?.state?.portal}
         itemsReload={this._triggerPortalItemsLoad.bind(this, this?.state?.portal)} />
       {this?.state?.portalItems}
-      <EditorModal isOpen={this?.state?.isEditorOpen} />
+      <EditorModal 
+        isOpen={this?.state?.isEditorOpen} 
+        toggleIsOpen={this.generalJSONEditorToggle.bind(this)} 
+        inputEditorText={DEFAULT_EDITOR_JSON}
+        confirmInput={(id: string, value: string)=>{
+          this.props.addToSavedJsonConfig(id, value);
+        }} 
+      />
     </div>;
   }
 
@@ -143,4 +152,16 @@ function mapStateToProps(state) {
   };
 }
 
-export default connect(mapStateToProps, null)(ControlPanel);
+function mapDispatchToProps(
+  dispatch
+): {
+  addToSavedJsonConfig: addToSavedJsonConfig,
+} {
+  return {
+    addToSavedJsonConfig: (id: string, value: string) => {
+      dispatch({ type: "ADDTO_SAVED_JSON_CONFIG", payload: {id, value} });
+    }
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ControlPanel);
